@@ -16,13 +16,23 @@ pub fn get_char_map(file_content: &String) -> HashMap<char, usize> {
     char_map //K - Symbol, V - Count
 }
 
-pub fn get_rank_map(char_map: &HashMap<char, usize>) -> HashMap<char, usize> {
-    let mut rank_map: HashMap<char, usize> = HashMap::new();
-    let mut vector: Vec<&char> = char_map.keys().collect();
-    vector.sort_by(|a, b| char_map.get(b).unwrap().cmp(char_map.get(a).unwrap()));
+pub fn get_alphabet(char_map: &HashMap<char, usize>) -> Vec<char> {
+    let mut alphabet: Vec<char> = Vec::new();
     
-    for (i, &el) in vector.iter().enumerate() {
-        rank_map.insert(*el, i + 1);
+    for el in char_map.keys() {
+        alphabet.push(*el);
+    }
+
+    alphabet.sort_by(|a, b| char_map.get(b).unwrap().cmp(char_map.get(a).unwrap()));
+
+    alphabet
+}
+
+pub fn get_rank_map(alphabet: &Vec<char>) -> HashMap<char, usize> {
+    let mut rank_map: HashMap<char, usize> = HashMap::new();
+
+    for (i, &el) in alphabet.iter().enumerate() {
+        rank_map.insert(el, i + 1);
     }
 
     rank_map //K - Symbol, V - Rank
@@ -32,7 +42,7 @@ pub fn get_gamma_map(rank_map: &HashMap<char, usize>) -> HashMap<usize, String> 
     let mut gamma_map: HashMap<usize, String> = HashMap::new();
 
     for el in rank_map.values() {
-        let zero_count = ((*el as f32).log2() as usize);
+        let zero_count = (*el as f32).log2() as usize;
         let mut gamma_code = String::new();
 
         for i in 0..zero_count {
@@ -59,4 +69,18 @@ pub fn get_delta_map(gamma_map: &HashMap<usize, String>) -> HashMap<usize, Strin
     }
 
     delta_map // K - Rank, V - Delta Elias' code
+}
+
+pub fn convert_content(
+    content: &String,
+    rank_map: &HashMap<char, usize>,
+    delta_map: &HashMap<usize, String>,
+) -> String {
+    let mut encoded_content = String::new();
+
+    for ch in content.chars() {
+        encoded_content.push_str(delta_map.get(rank_map.get(&ch).unwrap()).unwrap().as_str());
+    }
+
+    encoded_content
 }

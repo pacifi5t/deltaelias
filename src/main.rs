@@ -1,6 +1,7 @@
 #![allow(unused)]
 mod encoder;
 
+use encoder::*;
 use std::collections::HashMap;
 use std::env;
 use std::string::String;
@@ -24,8 +25,10 @@ fn main() {
 
 fn encode(input: &String, output: &String) {
     let content = read_from_file(&input).unwrap();
-    let rank_map = encoder::get_rank_map(&encoder::get_char_map(&content));
-    let delta_map = encoder::get_delta_map(&encoder::get_gamma_map(&rank_map));
+    let alphabet = get_alphabet(&get_char_map(&content));
+    let rank_map = get_rank_map(&alphabet);
+    let delta_map = get_delta_map(&get_gamma_map(&rank_map));
+    let encoded_content = convert_content(&content, &rank_map, &delta_map);
 
     println!();
     //TODO: Output in file
