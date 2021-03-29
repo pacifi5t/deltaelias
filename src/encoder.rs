@@ -1,7 +1,11 @@
-use std::collections::HashMap;
-use std::string::String;
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{self, prelude::*},
+    string::String,
+};
 
-pub fn get_char_map(file_content: &String) -> HashMap<char, usize> {
+pub fn gen_char_map(file_content: &String) -> HashMap<char, usize> {
     let mut char_map: HashMap<char, usize> = HashMap::new();
 
     for ch in file_content.chars() {
@@ -16,19 +20,18 @@ pub fn get_char_map(file_content: &String) -> HashMap<char, usize> {
     char_map //K - Symbol, V - Count
 }
 
-pub fn get_alphabet(char_map: &HashMap<char, usize>) -> Vec<char> {
+pub fn gen_alphabet(char_map: &HashMap<char, usize>) -> Vec<char> {
     let mut alphabet: Vec<char> = Vec::new();
-    
+
     for el in char_map.keys() {
         alphabet.push(*el);
     }
-
     alphabet.sort_by(|a, b| char_map.get(b).unwrap().cmp(char_map.get(a).unwrap()));
 
     alphabet
 }
 
-pub fn get_rank_map(alphabet: &Vec<char>) -> HashMap<char, usize> {
+pub fn gen_rank_map(alphabet: &Vec<char>) -> HashMap<char, usize> {
     let mut rank_map: HashMap<char, usize> = HashMap::new();
 
     for (i, &el) in alphabet.iter().enumerate() {
@@ -38,14 +41,14 @@ pub fn get_rank_map(alphabet: &Vec<char>) -> HashMap<char, usize> {
     rank_map //K - Symbol, V - Rank
 }
 
-pub fn get_gamma_map(rank_map: &HashMap<char, usize>) -> HashMap<usize, String> {
+pub fn gen_gamma_map(rank_map: &HashMap<char, usize>) -> HashMap<usize, String> {
     let mut gamma_map: HashMap<usize, String> = HashMap::new();
 
     for el in rank_map.values() {
         let zero_count = (*el as f32).log2() as usize;
         let mut gamma_code = String::new();
 
-        for i in 0..zero_count {
+        for _i in 0..zero_count {
             gamma_code.push('0');
         }
 
@@ -56,7 +59,7 @@ pub fn get_gamma_map(rank_map: &HashMap<char, usize>) -> HashMap<usize, String> 
     gamma_map //K - Rank, V - Gamma Elias' code
 }
 
-pub fn get_delta_map(gamma_map: &HashMap<usize, String>) -> HashMap<usize, String> {
+pub fn gen_delta_map(gamma_map: &HashMap<usize, String>) -> HashMap<usize, String> {
     let mut delta_map: HashMap<usize, String> = HashMap::new();
 
     for el in gamma_map.keys() {
@@ -71,7 +74,7 @@ pub fn get_delta_map(gamma_map: &HashMap<usize, String>) -> HashMap<usize, Strin
     delta_map // K - Rank, V - Delta Elias' code
 }
 
-pub fn convert_content(
+pub fn encode_content(
     content: &String,
     rank_map: &HashMap<char, usize>,
     delta_map: &HashMap<usize, String>,
@@ -83,4 +86,54 @@ pub fn convert_content(
     }
 
     encoded_content
+}
+
+pub fn write_encoded_to_file(
+    path: &String,
+    alphabet: &Vec<char>,
+    encoded: &String,
+) -> Result<File, io::Error> {
+    let mut file = File::create(path)?;
+    file.write(&alphabet.len().to_ne_bytes()[0..4])?;
+    file.write(vector_to_string(alphabet).as_bytes())?;
+    file.write(encoded_to_writable(encoded).as_bytes())?;
+
+    Ok(file)
+}
+
+pub fn vector_to_string(vector: &Vec<char>) -> String {
+    let mut string = String::new();
+
+    for ch in vector {
+        string.push(*ch);
+    }
+
+    string
+}
+
+pub fn encoded_to_writable(content: &String) -> String {
+    let byte_count = content.len() / 8;
+    let mut shortage = 8 - content.len() % 8;
+    let (full, short) = content.split_at(byte_count * 8);
+    let mut output_str = String::new();
+
+    if shortage == 8 {
+        shortage = 0;
+    }
+    output_str.push_str(&shortage.to_string());
+
+    for i in 0..byte_count {
+        let buffer = &full[i * 8..i * 8 + 8];
+        let ch = usize::from_str_radix(buffer, 2).unwrap().to_ne_bytes()[0];
+        output_str.push(ch as char);
+    }
+    if shortage != 0 {
+        output_str.push(
+            usize::from_str_radix(format!("{:0>8}", short).as_str(), 2)
+                .unwrap()
+                .to_ne_bytes()[0] as char
+        );
+    }
+
+    output_str
 }
