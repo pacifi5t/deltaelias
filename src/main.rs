@@ -1,7 +1,9 @@
 #![allow(unused)]
 
 mod encoder;
+mod decoder;
 
+use decoder::*;
 use encoder::*;
 use std::{
     env,
@@ -34,7 +36,8 @@ fn encode(input: &String, output: &String) {
 
 fn decode(input: &String, output: &String) {
     let content = read_from_file(&input);
-    
+    let (size, alphabet, exp, encoded) = parse_content(&content);
+
     println!();
     //TODO: Implement decoding
 }

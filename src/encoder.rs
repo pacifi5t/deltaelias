@@ -82,7 +82,12 @@ pub fn encode_content(
     let mut encoded_content = String::new();
 
     for byte in content {
-        encoded_content.push_str(delta_map.get(rank_map.get(&byte).unwrap()).unwrap().as_str());
+        encoded_content.push_str(
+            delta_map
+                .get(rank_map.get(&byte).unwrap())
+                .unwrap()
+                .as_str(),
+        );
     }
 
     encoded_content
@@ -94,39 +99,12 @@ pub fn write_encoded_to_file(
     encoded: &String,
 ) -> Result<File, io::Error> {
     let mut file = File::create(path)?;
-    file.write(&alphabet.len().to_ne_bytes()[0..4])?;
+    file.write(&alphabet.len().to_ne_bytes()[0..1])?;
     file.write(&alphabet)?;
     file.write(&encoded_to_writable(&encoded))?;
 
     Ok(file)
 }
-
-/*pub fn encoded_to_writable(content: &String) -> String {
-    let byte_count = content.len() / 8;
-    let mut shortage = 8 - content.len() % 8;
-    let (full, short) = content.split_at(byte_count * 8);
-    let mut output_str = String::new();
-
-    if shortage == 8 {
-        shortage = 0;
-    }
-    output_str.push(shortage.to_ne_bytes()[0] as char);
-
-    for i in 0..byte_count {
-        let buffer = &full[i * 8..i * 8 + 8];
-        let ch = usize::from_str_radix(buffer, 2).unwrap().to_ne_bytes()[0];
-        output_str.push(ch as char);
-    }
-    if shortage != 0 {
-        output_str.push(
-            usize::from_str_radix(format!("{:0>8}", short).as_str(), 2)
-                .unwrap()
-                .to_ne_bytes()[0] as char
-        );
-    }
-
-    output_str
-}*/
 
 pub fn encoded_to_writable(content: &String) -> Vec<u8> {
     let byte_count = content.len() / 8;
@@ -137,6 +115,7 @@ pub fn encoded_to_writable(content: &String) -> Vec<u8> {
     if shortage == 8 {
         shortage = 0;
     };
+    output.push(shortage.to_ne_bytes()[0]);
 
     for i in 0..byte_count {
         let buffer = &full[i * 8..i * 8 + 8];
@@ -147,10 +126,9 @@ pub fn encoded_to_writable(content: &String) -> Vec<u8> {
         output.push(
             usize::from_str_radix(format!("{:0>8}", short).as_str(), 2)
                 .unwrap()
-                .to_ne_bytes()[0]
+                .to_ne_bytes()[0],
         );
     };
-    println!();
-    output
 
+    output
 }
