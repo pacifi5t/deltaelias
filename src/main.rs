@@ -6,7 +6,7 @@ use encoder::*;
 use std::{
     env,
     fs::File,
-    io::{self, prelude::*},
+    io::{self, prelude::*, BufReader},
     string::String,
 };
 
@@ -24,8 +24,8 @@ fn main() {
 }
 
 fn encode(input: &String, output: &String) {
-    let content = read_from_file(&input).unwrap();
-    let alphabet = gen_alphabet(&gen_char_map(&content));
+    let content = read_from_file(&input);
+    let alphabet = gen_alphabet(&gen_byte_map(&content));
     let rank_map = gen_rank_map(&alphabet);
     let delta_map = gen_delta_map(&gen_gamma_map(&rank_map));
     let encoded_content = encode_content(&content, &rank_map, &delta_map);
@@ -33,14 +33,16 @@ fn encode(input: &String, output: &String) {
 }
 
 fn decode(input: &String, output: &String) {
+    let content = read_from_file(&input);
+    
+    println!();
     //TODO: Implement decoding
 }
 
-fn read_from_file(path: &String) -> Result<String, io::Error> {
-    let mut file = File::open(&path)?;
-    let mut content = String::new();
-    file.read_to_string(&mut content)?;
-    print!("{}", content);
+fn read_from_file(path: &String) -> Vec<u8> {
+    let mut file = File::open(&path).unwrap();
+    let mut content: Vec<u8> = Vec::new();
+    file.read_to_end(&mut content);
 
-    Ok(content)
+    content
 }

@@ -5,23 +5,23 @@ use std::{
     string::String,
 };
 
-pub fn gen_char_map(file_content: &String) -> HashMap<char, usize> {
-    let mut char_map: HashMap<char, usize> = HashMap::new();
+pub fn gen_byte_map(file_content: &Vec<u8>) -> HashMap<u8, usize> {
+    let mut char_map: HashMap<u8, usize> = HashMap::new();
 
-    for ch in file_content.chars() {
-        match char_map.get_mut(&ch) {
+    for byte in file_content {
+        match char_map.get_mut(&byte) {
             Some(existing) => *existing += 1,
             None => {
-                char_map.insert(ch, 1);
+                char_map.insert(*byte, 1);
             }
         }
     }
 
-    char_map //K - Symbol, V - Count
+    char_map //K - Byte, V - Count
 }
 
-pub fn gen_alphabet(char_map: &HashMap<char, usize>) -> Vec<char> {
-    let mut alphabet: Vec<char> = Vec::new();
+pub fn gen_alphabet(char_map: &HashMap<u8, usize>) -> Vec<u8> {
+    let mut alphabet: Vec<u8> = Vec::new();
 
     for el in char_map.keys() {
         alphabet.push(*el);
@@ -31,17 +31,17 @@ pub fn gen_alphabet(char_map: &HashMap<char, usize>) -> Vec<char> {
     alphabet
 }
 
-pub fn gen_rank_map(alphabet: &Vec<char>) -> HashMap<char, usize> {
-    let mut rank_map: HashMap<char, usize> = HashMap::new();
+pub fn gen_rank_map(alphabet: &Vec<u8>) -> HashMap<u8, usize> {
+    let mut rank_map: HashMap<u8, usize> = HashMap::new();
 
     for (i, &el) in alphabet.iter().enumerate() {
         rank_map.insert(el, i + 1);
     }
 
-    rank_map //K - Symbol, V - Rank
+    rank_map //K - Byte, V - Rank
 }
 
-pub fn gen_gamma_map(rank_map: &HashMap<char, usize>) -> HashMap<usize, String> {
+pub fn gen_gamma_map(rank_map: &HashMap<u8, usize>) -> HashMap<usize, String> {
     let mut gamma_map: HashMap<usize, String> = HashMap::new();
 
     for el in rank_map.values() {
@@ -75,14 +75,14 @@ pub fn gen_delta_map(gamma_map: &HashMap<usize, String>) -> HashMap<usize, Strin
 }
 
 pub fn encode_content(
-    content: &String,
-    rank_map: &HashMap<char, usize>,
+    content: &Vec<u8>,
+    rank_map: &HashMap<u8, usize>,
     delta_map: &HashMap<usize, String>,
 ) -> String {
     let mut encoded_content = String::new();
 
-    for ch in content.chars() {
-        encoded_content.push_str(delta_map.get(rank_map.get(&ch).unwrap()).unwrap().as_str());
+    for byte in content {
+        encoded_content.push_str(delta_map.get(rank_map.get(&byte).unwrap()).unwrap().as_str());
     }
 
     encoded_content
@@ -90,28 +90,18 @@ pub fn encode_content(
 
 pub fn write_encoded_to_file(
     path: &String,
-    alphabet: &Vec<char>,
+    alphabet: &Vec<u8>,
     encoded: &String,
 ) -> Result<File, io::Error> {
     let mut file = File::create(path)?;
     file.write(&alphabet.len().to_ne_bytes()[0..4])?;
-    file.write(vector_to_string(alphabet).as_bytes())?;
-    file.write(encoded_to_writable(encoded).as_bytes())?;
+    file.write(&alphabet)?;
+    file.write(&encoded_to_writable(&encoded))?;
 
     Ok(file)
 }
 
-pub fn vector_to_string(vector: &Vec<char>) -> String {
-    let mut string = String::new();
-
-    for ch in vector {
-        string.push(*ch);
-    }
-
-    string
-}
-
-pub fn encoded_to_writable(content: &String) -> String {
+/*pub fn encoded_to_writable(content: &String) -> String {
     let byte_count = content.len() / 8;
     let mut shortage = 8 - content.len() % 8;
     let (full, short) = content.split_at(byte_count * 8);
@@ -120,7 +110,7 @@ pub fn encoded_to_writable(content: &String) -> String {
     if shortage == 8 {
         shortage = 0;
     }
-    output_str.push_str(&shortage.to_string());
+    output_str.push(shortage.to_ne_bytes()[0] as char);
 
     for i in 0..byte_count {
         let buffer = &full[i * 8..i * 8 + 8];
@@ -136,4 +126,31 @@ pub fn encoded_to_writable(content: &String) -> String {
     }
 
     output_str
+}*/
+
+pub fn encoded_to_writable(content: &String) -> Vec<u8> {
+    let byte_count = content.len() / 8;
+    let mut shortage = 8 - content.len() % 8;
+    let (full, short) = content.split_at(byte_count * 8);
+    let mut output: Vec<u8> = Vec::new();
+
+    if shortage == 8 {
+        shortage = 0;
+    };
+
+    for i in 0..byte_count {
+        let buffer = &full[i * 8..i * 8 + 8];
+        let ch = usize::from_str_radix(buffer, 2).unwrap().to_ne_bytes()[0];
+        output.push(ch);
+    }
+    if shortage != 0 {
+        output.push(
+            usize::from_str_radix(format!("{:0>8}", short).as_str(), 2)
+                .unwrap()
+                .to_ne_bytes()[0]
+        );
+    };
+    println!();
+    output
+
 }
