@@ -56,7 +56,7 @@ pub fn gen_gamma_map(rank_map: &HashMap<u8, usize>) -> HashMap<usize, String> {
         gamma_map.insert(*el, gamma_code);
     }
 
-    gamma_map //K - Rank, V - Gamma Elias' code
+    gamma_map //K - Rank, V - Gamma code
 }
 
 pub fn gen_delta_map(gamma_map: &HashMap<usize, String>) -> HashMap<usize, String> {
@@ -99,7 +99,7 @@ pub fn write_encoded_to_file(
     encoded: &String,
 ) -> Result<File, io::Error> {
     let mut file = File::create(path)?;
-    file.write(&alphabet.len().to_ne_bytes()[0..1])?;
+    file.write(&(alphabet.len() - 1).to_ne_bytes()[0..1])?;
     file.write(&alphabet)?;
     file.write(&encoded_to_writable(&encoded))?;
 

@@ -1,14 +1,12 @@
-#![allow(unused)]
-
-mod encoder;
 mod decoder;
+mod encoder;
 
 use decoder::*;
 use encoder::*;
 use std::{
     env,
     fs::File,
-    io::{self, prelude::*, BufReader},
+    io::prelude::*,
     string::String,
 };
 
@@ -36,10 +34,10 @@ fn encode(input: &String, output: &String) {
 
 fn decode(input: &String, output: &String) {
     let content = read_from_file(&input);
-    let (size, alphabet, exp, encoded) = parse_content(&content);
-
-    println!();
-    //TODO: Implement decoding
+    let (alphabet, exp, encoded) = parse_content(&content);
+    let dedoding_map = gen_decoding_map(&alphabet);
+    let decoded = decode_content(&encoded, exp, &dedoding_map);
+    write_decoded_to_file(output, &decoded);
 }
 
 fn read_from_file(path: &String) -> Vec<u8> {
