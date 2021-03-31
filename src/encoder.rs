@@ -1,13 +1,7 @@
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::{self, prelude::*},
-    string::String,
-};
+use std::{collections::HashMap, fs::File, io::prelude::*, string::String};
 
 pub fn gen_byte_map(file_content: &Vec<u8>) -> HashMap<u8, usize> {
     let mut char_map: HashMap<u8, usize> = HashMap::new();
-
     for byte in file_content {
         match char_map.get_mut(&byte) {
             Some(existing) => *existing += 1,
@@ -22,7 +16,6 @@ pub fn gen_byte_map(file_content: &Vec<u8>) -> HashMap<u8, usize> {
 
 pub fn gen_alphabet(char_map: &HashMap<u8, usize>) -> Vec<u8> {
     let mut alphabet: Vec<u8> = Vec::new();
-
     for el in char_map.keys() {
         alphabet.push(*el);
     }
@@ -33,7 +26,6 @@ pub fn gen_alphabet(char_map: &HashMap<u8, usize>) -> Vec<u8> {
 
 pub fn gen_rank_map(alphabet: &Vec<u8>) -> HashMap<u8, usize> {
     let mut rank_map: HashMap<u8, usize> = HashMap::new();
-
     for (i, &el) in alphabet.iter().enumerate() {
         rank_map.insert(el, i + 1);
     }
@@ -43,7 +35,6 @@ pub fn gen_rank_map(alphabet: &Vec<u8>) -> HashMap<u8, usize> {
 
 pub fn gen_gamma_map(rank_map: &HashMap<u8, usize>) -> HashMap<usize, String> {
     let mut gamma_map: HashMap<usize, String> = HashMap::new();
-
     for el in rank_map.values() {
         let zero_count = (*el as f32).log2() as usize;
         let mut gamma_code = String::new();
@@ -61,7 +52,6 @@ pub fn gen_gamma_map(rank_map: &HashMap<u8, usize>) -> HashMap<usize, String> {
 
 pub fn gen_delta_map(gamma_map: &HashMap<usize, String>) -> HashMap<usize, String> {
     let mut delta_map: HashMap<usize, String> = HashMap::new();
-
     for el in gamma_map.keys() {
         let temp = ((*el as f32).log2() as usize) + 1;
         let mut delta_code = String::new();
@@ -80,7 +70,6 @@ pub fn encode_content(
     delta_map: &HashMap<usize, String>,
 ) -> String {
     let mut encoded_content = String::new();
-
     for byte in content {
         encoded_content.push_str(
             delta_map
@@ -91,19 +80,6 @@ pub fn encode_content(
     }
 
     encoded_content
-}
-
-pub fn write_encoded_to_file(
-    path: &String,
-    alphabet: &Vec<u8>,
-    encoded: &String,
-) -> Result<File, io::Error> {
-    let mut file = File::create(path)?;
-    file.write(&(alphabet.len() - 1).to_ne_bytes()[0..1])?;
-    file.write(&alphabet)?;
-    file.write(&encoded_to_writable(&encoded))?;
-
-    Ok(file)
 }
 
 pub fn encoded_to_writable(content: &String) -> Vec<u8> {
@@ -119,16 +95,23 @@ pub fn encoded_to_writable(content: &String) -> Vec<u8> {
 
     for i in 0..byte_count {
         let buffer = &full[i * 8..i * 8 + 8];
-        let ch = usize::from_str_radix(buffer, 2).unwrap().to_ne_bytes()[0];
+        let ch = bin_str_to_byte(buffer);
         output.push(ch);
     }
     if shortage != 0 {
-        output.push(
-            usize::from_str_radix(format!("{:0>8}", short).as_str(), 2)
-                .unwrap()
-                .to_ne_bytes()[0],
-        );
+        output.push(bin_str_to_byte(format!("{:0>8}", short).as_str()));
     };
 
     output
+}
+
+pub fn write_encoded_to_file(path: &String, alphabet: &Vec<u8>, encoded: &String) {
+    let mut file = File::create(path).unwrap();
+    file.write(&(alphabet.len() - 1).to_ne_bytes()[0..1]);
+    file.write(&alphabet);
+    file.write(&encoded_to_writable(&encoded));
+}
+
+pub fn bin_str_to_byte(bin_str: &str) -> u8 {
+    usize::from_str_radix(bin_str, 2).unwrap().to_ne_bytes()[0]
 }

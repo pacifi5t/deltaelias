@@ -1,21 +1,19 @@
+#![allow(unused)]
+
 mod decoder;
 mod encoder;
 
 use decoder::*;
 use encoder::*;
-use std::{
-    env,
-    fs::File,
-    io::prelude::*,
-    string::String,
-};
+use std::{env, fs::File, io::prelude::*, string::String};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let option = &args[1];
-    let input_path = &args[2];
-    let output_path = &args[3];
-
+    if args.len() - 1 != 3 {
+        println!("Expected 3 arguements, found {}", args.len() - 1);
+        return;
+    }
+    let (option, input_path, output_path) = (&args[1], &args[2], &args[3]);
     match option.as_str() {
         "encode" => encode(input_path, output_path),
         "decode" => decode(input_path, output_path),
@@ -25,6 +23,10 @@ fn main() {
 
 fn encode(input: &String, output: &String) {
     let content = read_from_file(&input);
+    if content.len() == 0 {
+        println!("Empty file, nothing to encode");
+        return;
+    }
     let alphabet = gen_alphabet(&gen_byte_map(&content));
     let rank_map = gen_rank_map(&alphabet);
     let delta_map = gen_delta_map(&gen_gamma_map(&rank_map));
@@ -34,6 +36,10 @@ fn encode(input: &String, output: &String) {
 
 fn decode(input: &String, output: &String) {
     let content = read_from_file(&input);
+    if content.len() == 0 {
+        println!("Empty file, nothing to decode");
+        return;
+    }
     let (alphabet, exp, encoded) = parse_content(&content);
     let dedoding_map = gen_decoding_map(&alphabet);
     let decoded = decode_content(&encoded, exp, &dedoding_map);

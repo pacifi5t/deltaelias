@@ -1,25 +1,24 @@
-use std::{collections::HashMap, fs::File, string::String, io::prelude::*};
+use std::{collections::HashMap, fs::File, io::prelude::*, string::String};
 
 pub fn parse_content(content: &Vec<u8>) -> (Vec<u8>, u8, Vec<u8>) {
     let mut size = content[0] as usize;
     size += 1;
-    let mut alphabet: Vec<u8> = Vec::new();
 
+    let mut alphabet: Vec<u8> = Vec::new();
     for &byte in &content[1..1 + size] {
         alphabet.push(byte);
     }
 
     let mut encoded: Vec<u8> = Vec::new();
-
     for &byte in &content[2 + size..] {
         encoded.push(byte);
     }
+
     (alphabet, content[1 + size], encoded)
 }
 
 pub fn gen_decoding_map(alphabet: &Vec<u8>) -> HashMap<usize, u8> {
     let mut decoding_map: HashMap<usize, u8> = HashMap::new();
-
     for (i, &el) in alphabet.iter().enumerate() {
         decoding_map.insert(i + 1, el);
     }
@@ -29,7 +28,6 @@ pub fn gen_decoding_map(alphabet: &Vec<u8>) -> HashMap<usize, u8> {
 
 pub fn decode_content(encoded: &Vec<u8>, exp: u8, decoding_map: &HashMap<usize, u8>) -> Vec<u8> {
     let mut encoded_str = String::new();
-
     for i in 0..encoded.len() {
         let mut temp = format!("{:0>8}", format!("{:b}", encoded[i]));
 
@@ -41,10 +39,10 @@ pub fn decode_content(encoded: &Vec<u8>, exp: u8, decoding_map: &HashMap<usize, 
 
     let vector: Vec<char> = encoded_str.chars().collect();
     let mut ranks: Vec<usize> = Vec::new();
-    let mut i = 0;
     let mut zero_counter = 0;
     encoded_str.clear();
 
+    let mut i = 0;
     while i < vector.len() {
         if vector[i] == '0' {
             zero_counter += 1;
@@ -70,10 +68,10 @@ pub fn decode_content(encoded: &Vec<u8>, exp: u8, decoding_map: &HashMap<usize, 
         }
     }
     let mut output: Vec<u8> = Vec::new();
-
     for rank in ranks {
         output.push(*decoding_map.get(&rank).unwrap())
     }
+
     output
 }
 
