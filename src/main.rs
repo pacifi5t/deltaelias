@@ -40,9 +40,9 @@ fn decode(input: &String, output: &String) {
         println!("Empty file, nothing to decode");
         return;
     }
-    let (alphabet, exp, encoded) = parse_content(&content);
+    let (alphabet, ext, encoded) = parse_content(&content);
     let dedoding_map = gen_decoding_map(&alphabet);
-    let decoded = decode_content(&encoded, exp, &dedoding_map);
+    let decoded = decode_content(&encoded, ext, &dedoding_map);
     write_decoded_to_file(output, &decoded);
 }
 

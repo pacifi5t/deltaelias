@@ -23,16 +23,16 @@ pub fn gen_decoding_map(alphabet: &Vec<u8>) -> HashMap<usize, u8> {
         decoding_map.insert(i + 1, el);
     }
 
-    decoding_map
+    decoding_map    //K - Rank, V - Byte
 }
 
-pub fn decode_content(encoded: &Vec<u8>, exp: u8, decoding_map: &HashMap<usize, u8>) -> Vec<u8> {
+pub fn decode_content(encoded: &Vec<u8>, ext: u8, decoding_map: &HashMap<usize, u8>) -> Vec<u8> {
     let mut encoded_str = String::new();
     for i in 0..encoded.len() {
         let mut temp = format!("{:0>8}", format!("{:b}", encoded[i]));
 
         if i == encoded.len() - 1 {
-            temp = temp.split_off(exp as usize);
+            temp = temp.split_off(ext as usize);
         }
         encoded_str.push_str(temp.as_str());
     }

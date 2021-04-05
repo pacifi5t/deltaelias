@@ -95,8 +95,8 @@ pub fn encoded_to_writable(content: &String) -> Vec<u8> {
 
     for i in 0..byte_count {
         let buffer = &full[i * 8..i * 8 + 8];
-        let ch = bin_str_to_byte(buffer);
-        output.push(ch);
+        let byte = bin_str_to_byte(buffer);
+        output.push(byte);
     }
     if shortage != 0 {
         output.push(bin_str_to_byte(format!("{:0>8}", short).as_str()));
